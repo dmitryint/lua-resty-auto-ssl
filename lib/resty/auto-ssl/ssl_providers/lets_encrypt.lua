@@ -13,7 +13,7 @@ function _M.issue_cert(auto_ssl_instance, domain)
 
   local hook_port = auto_ssl_instance:get("hook_server_port")
   local multiname = auto_ssl_instance:get("multiname_cert")
-  domains = "--domain " .. domain .. " "
+  domains = "--domain", domain
 
   local hook_port = auto_ssl_instance:get("hook_server_port")
   assert(type(hook_port) == "number", "hook_port must be a number")
@@ -25,13 +25,12 @@ function _M.issue_cert(auto_ssl_instance, domain)
   if multiname then
     local storage = auto_ssl_instance:get("storage")
     domain_list, size = storage:get_subdomain(domain)
-    domains = " "
     if domain_list then
       for _, i in pairs(domain_list) do
-        domains = domains .. "--domain " .. i .. " "
+        domains = domains, "--domain ", i
       end
     else
-      domains = "--domain " .. domain .. " "
+      domains = domains, "--domain ", domain
     end
   end
 
