@@ -13,8 +13,7 @@ function _M.issue_cert(auto_ssl_instance, domain)
 
   local hook_port = auto_ssl_instance:get("hook_server_port")
   local multiname = auto_ssl_instance:get("multiname_cert")
-  domains = "--domain", domain
-
+  
   local hook_port = auto_ssl_instance:get("hook_server_port")
   assert(type(hook_port) == "number", "hook_port must be a number")
   assert(hook_port <= 65535, "hook_port must be below 65536")
@@ -22,15 +21,31 @@ function _M.issue_cert(auto_ssl_instance, domain)
   local hook_secret = ngx.shared.auto_ssl_settings:get("hook_server:secret")
   assert(type(hook_secret) == "string", "hook_server:secret must be a string")
 
+  command_args = {
+    "env",
+    "HOOK_SECRET=" .. hook_secret,
+    "HOOK_SERVER_PORT=" .. hook_port,
+    lua_root .. "/bin/resty-auto-ssl/dehydrated",
+    "--cron",
+    "--accept-terms",
+    "--no-lock",
+    "--challenge", "http-01",
+    "--config", base_dir .. "/letsencrypt/config",
+    "--hook", lua_root .. "/bin/resty-auto-ssl/letsencrypt_hooks",
+    "--domain", domain,
+  }
+
   if multiname then
     local storage = auto_ssl_instance:get("storage")
     domain_list, size = storage:get_subdomain(domain)
     if domain_list then
       for _, i in pairs(domain_list) do
-        domains = domains, "--domain ", i
+        table.insert(command_args, "--domain")
+        table.insert(command_args, i)
       end
     else
-      domains = domains, "--domain ", domain
+        table.insert(command_args, "--domain")
+        table.insert(command_args, domain)
     end
   end
 
@@ -39,19 +54,7 @@ function _M.issue_cert(auto_ssl_instance, domain)
   --
   -- Disable dehydrated's locking, since we perform our own domain-specific
   -- locking using the storage adapter.
-  local result, err = shell_execute({
-    "env",
-    "HOOK_SECRET=" .. hook_secret,
-    "HOOK_SERVER_PORT=" .. hook_port,
-    lua_root .. "/bin/resty-auto-ssl/dehydrated",
-    "--cron",
-    "--accept-terms",
-    "--no-lock",
-    domains,
-    "--challenge", "http-01",
-    "--config", base_dir .. "/letsencrypt/config",
-    "--hook", lua_root .. "/bin/resty-auto-ssl/letsencrypt_hooks",
-  })
+  local result, err = shell_execute(command_args)
   if result["status"] ~= 0 then
     ngx.log(ngx.ERR, "auto-ssl: dehydrated failed: ", result["command"], " status: ", result["status"], " out: ", result["output"], " err: ", err)
     return nil, "dehydrated failure"
