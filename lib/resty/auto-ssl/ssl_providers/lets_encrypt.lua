@@ -36,7 +36,7 @@ function _M.issue_cert(auto_ssl_instance, domain)
   }
 
   if multiname then
-    local storage = auto_ssl_instance:get("storage")
+    local storage = auto_ssl_instance.storage
     domain_list, size = storage:get_subdomain(domain)
     if domain_list then
       for _, i in pairs(domain_list) do
