@@ -21,7 +21,7 @@ function _M.issue_cert(auto_ssl_instance, domain)
   local hook_secret = ngx.shared.auto_ssl_settings:get("hook_server:secret")
   assert(type(hook_secret) == "string", "hook_server:secret must be a string")
 
-  command_args = {
+  local command_args = {
     "env",
     "HOOK_SECRET=" .. hook_secret,
     "HOOK_SERVER_PORT=" .. hook_port,

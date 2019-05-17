@@ -78,7 +78,7 @@ function _M.get_subdomain(self, domain)
     if err then
        return nil, nil, err
     elseif not json then
-       return nil
+       return nil, nil, true
     end
     local data = cjson.decode(json)
     local ar = subdomains(data['subdomain'])
@@ -134,6 +134,8 @@ function _M.set_subdomain(self, domain, subdomain, extended)
     if exists then
       return
     end
+	
+	local data
     if extend then
       data = cjson.encode({domain=domain,
                            subdomain=subdomain_list,
