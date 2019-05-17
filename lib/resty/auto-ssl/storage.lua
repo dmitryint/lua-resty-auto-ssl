@@ -32,7 +32,7 @@ function _M.get_domains(self, domain, level)
       if level > size then
         return nil
       end
-      x = name_list[size]
+      local x = name_list[size]
       for i=1, level-1 do
         x = name_list[size-i] .. "." .. x
       end
