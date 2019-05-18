@@ -1,12 +1,12 @@
 package = "lua-resty-auto-ssl"
 version = "git-1"
 source = {
-  url = "git://github.com/Energy1190/lua-resty-auto-ssl.git",
+  url = "git://github.com/dmitryint/lua-resty-auto-ssl.git",
 }
 description = {
   summary = "Automatic SSL handling for OpenResty",
   detailed = "On the fly (and free) SSL registration and renewal inside OpenResty/nginx with Let's Encrypt.",
-  homepage = "https://github.com/Energy1190/lua-resty-auto-ssl",
+  homepage = "https://github.com/dmitryint/lua-resty-auto-ssl",
   license = "MIT",
 }
 dependencies = {
