@@ -94,10 +94,9 @@ local function issue_cert(auto_ssl_instance, storage, domain)
   end
   
   if not multiname then
-    fullchain_pem, privkey_pem = storage:get_cert(domain)
-    if fullchain_pem and privkey_pem then
+    if cert and cert["fullchain_pem"] and cert["privkey_pem"] then
       issue_cert_unlock(domain, storage, local_lock, distributed_lock_value)
-      return fullchain_pem, privkey_pem
+      return cert
     end
   end
   
@@ -311,6 +310,11 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     elseif not check_subdomain then
       storage:set_subdomain(domain, sub_domain, nil)
       issue_cert(auto_ssl_instance, storage, domain)
+      local ok, err = ssl.clear_certs()
+      if not ok then
+        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
+        return ngx.exit(ngx.ERROR)
+      end
     end
 
     local check_subdomain, size = storage:check_subdomain(domain, sub_domain)
