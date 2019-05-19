@@ -298,7 +298,9 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     local storage = auto_ssl_instance.storage
 	local sub_domain
     domain, sub_domain = storage:get_domains(domain, multiname)
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname: doamin: ", domain, " subdomain: ", sub_domain)
     local check_subdomain, size = storage:check_subdomain(domain, sub_domain)
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname: check_subdomain: ", check_subdomain, " size: ", size)
     if size then
       if size>99 then
         storage:set_subdomain(domain, sub_domain, sub_domain)

@@ -42,6 +42,8 @@ function _M.get_domains(self, domain, level)
     if type(level) ~= "number" then
       level = 2
     end
+	
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname: get_domains: domain:", domain)
     local ar = subdomain(domain)
     local size = tablelength(ar)
 
@@ -83,6 +85,8 @@ function _M.get_subdomain(self, domain)
     local data = cjson.decode(json)
     local ar = subdomains(data['subdomain'])
     local extended = subdomains(data['extended'])
+	
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname: get_subdomain: json:", data)
     local size = check_max_len(ar, tablelength(ar))
     return ar, size, nil, extended
 end
