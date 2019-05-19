@@ -19,6 +19,42 @@ function tablelength(a)
   return count
 end
 
+function table.val_to_str ( v )
+  if "string" == type( v ) then
+    v = string.gsub( v, "\n", "\\n" )
+    if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
+      return "'" .. v .. "'"
+    end
+    return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
+  else
+    return "table" == type( v ) and table.tostring( v ) or
+      tostring( v )
+  end
+end
+
+function table.key_to_str ( k )
+  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
+    return k
+  else
+    return "[" .. table.val_to_str( k ) .. "]"
+  end
+end
+
+function table.tostring( tbl )
+  local result, done = {}, {}
+  for k, v in ipairs( tbl ) do
+    table.insert( result, table.val_to_str( v ) )
+    done[ k ] = true
+  end
+  for k, v in pairs( tbl ) do
+    if not done[ k ] then
+      table.insert( result,
+        table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
+    end
+  end
+  return "{" .. table.concat( result, "," ) .. "}"
+end
+
 function _M.get_domains(self, domain, level)
     local function subdomain(a)
       local x = {}
@@ -86,7 +122,7 @@ function _M.get_subdomain(self, domain)
     local ar = subdomains(data['subdomain'])
     local extended = subdomains(data['extended'])
 	
-	ngx.log(ngx.DEBUG, "auto-ssl: multiname: get_subdomain: json:", data)
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname: get_subdomain: json:", table.tostring(data))
     local size = check_max_len(ar, tablelength(ar))
     return ar, size, nil, extended
 end
