@@ -338,52 +338,12 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	end
 
 	function multiname_logic (domain)
-	   local local_domain = check_domain(domain)
+	   local storage = auto_ssl_instance.storage
+	   local local_domain = storage:check_multiname(domain)
+	   ngx.log(ngx.NOTICE, "Testing program init: multiname_logic: local_domain: ", local_domain)
 	   return domain
 	end
 
-	function check_domain (domain)
-	  local cert_name = "domain"
-	  local include = "subdomain"
-	  local domain_dict = {}
-	  local storage = auto_ssl_instance.storage
-	  local keys, err = storage:get_adapter_keys("main")
-	  if err then
-	    ngx.log(ngx.ERR, "Testing program: keys from redis: ERROR", table.tostring(keys))
-      end
-	  for k, v in pairs(keys) do
-	    ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", k, " value: ", v)
-	    local key, err = storage:get_adapter_key(v, true)
-		if err then
-	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
-		else
-		  ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))
-		  if key[cert_name] ~= nil and key[include] ~= nil then
-			  ngx.log(ngx.ERR, "Testing program: keys from redis: key: cert_name: ", key[cert_name])
-			  ngx.log(ngx.ERR, "Testing program: keys from redis: key: include: ", key[include])
-			  domain_dict[key[cert_name]] = key[include] 
-		  else
-		      ngx.log(ngx.ERR, "Testing program: keys from redis: no_data ")
-          end			  
-		end
-	  end
-	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
-	  ngx.log(ngx.NOTICE, "Testing program: ARRAY", table.tostring(domain_dict))
-	  
-	  local return_cert_name
-	  for k, v in pairs(domain_dict) do
-	    for existed_domain in string.gmatch(v, '([^:]+)') do
-		  ngx.log(ngx.NOTICE, "Testing program: check domain: ", existed_domain)
-		  if existed_domain == domain then
-		    return_cert_name = k
-		  end
-		end
-	  end
-	  
-	  ngx.log(ngx.NOTICE, "Testing program: return domain: ", return_cert_name)
-	  return return_cert_name
-	end
-  
   test_logic(domain)
   local multiname = auto_ssl_instance:get("multiname_cert")
   if multiname then

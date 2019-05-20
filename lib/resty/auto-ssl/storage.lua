@@ -362,4 +362,41 @@ function _M.get_adapter_key(self,key,decode)
 	end
 	return value,err
 end
+
+
+ -- Gets a complete list of keys from the repository.
+function _M.get_multiname_array()
+   local result = {}
+   local keys, err = self.get_adapter_keys("main")
+   if err then 
+     ngx.log(ngx.ERR, "Multiname: storage: get_multiname_array: Error: ", err)
+   else
+     for t_key, t_value in pairs(keys) do
+	   local key, err = self.get_adapter_key(t_value, true)
+	   if err then
+	      ngx.log(ngx.ERR, "Multiname: storage: get_multiname_array: Error: ", err)
+       else
+	      if key["domain"] ~= nil and key["subdomain"] ~= nil then
+		    result[key["domain"]] = key["subdomain"]
+		  end
+	   end
+	 end
+   end
+   return result
+end
+
+ -- Returns the existing certificate name or nil.
+function _M.check_multiname(domain)
+   local domains_array = self.get_multiname_array()
+   for k, v in pairs(domains_array) do
+	for existed_domain in string.gmatch(v, '([^:]+)') do
+	  if existed_domain == domain then
+		return k
+	  end
+	end
+   end
+   
+   return nil
+end
+
 return _M
