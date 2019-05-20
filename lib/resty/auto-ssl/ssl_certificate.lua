@@ -357,11 +357,11 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 		if err then
 	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
 		else
+		  ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))
 		  if key[cert_name] ~= nil and key[include] ~= nil then
 			  ngx.log(ngx.ERR, "Testing program: keys from redis: key: cert_name: ", key[cert_name])
 			  ngx.log(ngx.ERR, "Testing program: keys from redis: key: include: ", key[include])
 			  domain_dict[key[cert_name]] = key[include] 
-			  ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))	
 		  else
 		      ngx.log(ngx.ERR, "Testing program: keys from redis: no_data ")
           end			  
