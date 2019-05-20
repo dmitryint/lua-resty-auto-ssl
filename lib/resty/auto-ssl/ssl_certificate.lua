@@ -347,12 +347,14 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	   
 	   local domain_cert_name = nil
 	   local cert_array = storage:get_multiname_array()
-	   for cert_name, value in cert_array do
-	     local valid = storage:validate_multiname(value, domain)
-		 if valid then
-		   domain_cert_name = cert_name
-		   break
-		 end
+	   if cert_array
+	     for cert_name, value in pairs(cert_array) do
+		   local valid = storage:validate_multiname(value, domain)
+		   if valid then
+		     domain_cert_name = cert_name
+		     break
+		   end
+	     end
 	   end
 	   
 	   if domain_cert_name then
