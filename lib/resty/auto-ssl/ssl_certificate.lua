@@ -345,13 +345,13 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	function check_domain (domain)
 	  local storage = auto_ssl_instance.storage
 	  local keys, err = storage:get_adapter_keys("main")
-	  if err 
+	  if err then
 	    ngx.log(ngx.ERR, "Testing program: keys from redis: ERROR", table.tostring(keys))
       end
-	  for k, v in pairs(keys)
+	  for k, v in pairs(keys) do
 	    ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", k, " value: ", v)
 	    local key, err = storage:get_adapter_key(v)
-		if err 
+		if err then
 	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
 		end
         ngx.log(ngx.ERR, "Testing program: keys from redis: key", table.tostring(key))	
