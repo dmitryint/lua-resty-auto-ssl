@@ -406,7 +406,7 @@ function _M.validate_multiname(self, domain_array, new_domain)
    
    local domains = 0
    for word in string.gmatch(domain_array, '([^:]+)') do
-     domains +=1
+     domains = domains + 1
    end
    
    if not domains or domains > 100 then
