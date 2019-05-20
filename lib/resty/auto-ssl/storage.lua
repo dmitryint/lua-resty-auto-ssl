@@ -365,7 +365,7 @@ end
 
 
  -- Gets a complete list of keys from the repository.
-function _M.get_multiname_array()
+function _M.get_multiname_array(self)
    local result = {}
    local keys, err = self.get_adapter_keys("main")
    if err then 
@@ -386,7 +386,7 @@ function _M.get_multiname_array()
 end
 
  -- Returns the existing certificate name or nil.
-function _M.check_multiname(domain)
+function _M.check_multiname(self, domain)
    local domains_array = self.get_multiname_array()
    for k, v in pairs(domains_array) do
 	for existed_domain in string.gmatch(v, '([^:]+)') do
@@ -397,6 +397,11 @@ function _M.check_multiname(domain)
    end
    
    return nil
+end
+
+ -- Сhecks the certificate for the ability to add new domains.
+function _M.validate_multiname(self, domain_array)
+   ngx.log(ngx.ERR, "Multiname: storage: validate_multiname: ", domain_array)
 end
 
 return _M
