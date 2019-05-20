@@ -355,7 +355,11 @@ function _M.get_adapter_keys(self,suffix)
 	return self.adapter:keys_with_suffix(suffix)
 end
 
-function _M.get_adapter_key(self,key)
-	return self.adapter:get(key)
+function _M.get_adapter_key(self,key,decode)
+    local value, err = self.adapter:get(key)
+	if not err and decode then
+	  value = cjson.decode(json)
+	end
+	return value,err
 end
 return _M
