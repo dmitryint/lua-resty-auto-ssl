@@ -358,7 +358,7 @@ end
 function _M.get_adapter_key(self,key,decode)
     local value, err = self.adapter:get(key)
 	if not err and decode then
-	  value = cjson.decode(json)
+	  value = cjson.decode(value)
 	end
 	return value,err
 end
