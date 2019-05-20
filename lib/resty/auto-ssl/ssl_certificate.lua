@@ -55,9 +55,8 @@ local function issue_cert_unlock(domain, storage, local_lock, distributed_lock_v
   end
 end
 
-local function issue_cert(auto_ssl_instance, storage, domain)
+local function issue_cert(auto_ssl_instance, storage, domain, multiname_update_flag)
   local fullchain_pem, privkey_pem, err
-  local multiname = auto_ssl_instance:get("multiname_cert")
   -- Before issuing a cert, create a local lock to ensure multiple workers
   -- don't simultaneously try to register the same cert.
   local local_lock, new_local_lock_err = lock:new("auto_ssl", { exptime = 30, timeout = 30 })
@@ -88,12 +87,7 @@ local function issue_cert(auto_ssl_instance, storage, domain)
     ngx.log(ngx.ERR, "auto-ssl: error fetching certificate from storage for ", domain, ": ", err)
   end
 
-  if cert and cert["fullchain_pem"] and cert["privkey_pem"] then
-    issue_cert_unlock(domain, storage, local_lock, distributed_lock_value)
-    return cert
-  end
-  
-  if not multiname then
+  if not multiname_update_flag then
     if cert and cert["fullchain_pem"] and cert["privkey_pem"] then
       issue_cert_unlock(domain, storage, local_lock, distributed_lock_value)
       return cert
@@ -151,7 +145,7 @@ local function get_cert_der(auto_ssl_instance, domain, ssl_options)
 
   -- Finally, issue a new certificate if one hasn't been found yet.
   if not ssl_options or ssl_options["generate_certs"] ~= false then
-    cert = issue_cert(auto_ssl_instance, storage, domain)
+    cert = issue_cert(auto_ssl_instance, storage, domain, nil)
     if cert and cert["fullchain_pem"] and cert["privkey_pem"] then
       local cert_der = convert_to_der_and_cache(domain, cert)
       cert_der["newly_issued"] = true
@@ -319,7 +313,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     if domain_cert_name then
  	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: update: ", domain_cert_name)
 	  storage:update_multiname(domain_cert_name,domain)
-	  check = issue_cert(auto_ssl_instance, storage, domain)
+	  check = issue_cert(auto_ssl_instance, storage, domain, true)
 	  if not check then
 	    storage:remove_multiname(domain_cert_name,domain)
 	  end
@@ -331,7 +325,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     else
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: create: ", domain_cert_name)
 	  storage:create_multiname(domain)
-	  check = issue_cert(auto_ssl_instance, storage, domain)
+	  check = issue_cert(auto_ssl_instance, storage, domain, true)
 	  if not check then
 	    storage:remove_multiname(domain,domain)
 	  end
