@@ -356,10 +356,10 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	    local key, err = storage:get_adapter_key(v, true)
 		if err then
 	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
-		  continue
+		else
+		  domain_dict[key[cert_name]] = key[include] 
+		  ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))	
 		end
-		domain_dict[key[cert_name]] = key[include] 
-        ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))	
 	  end
 	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
 	  ngx.log(ngx.NOTICE, "Testing program: ARRAY", table.tostring(domain_dict))
