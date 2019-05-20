@@ -334,6 +334,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  ngx.log(ngx.NOTICE, "Testing program init: incoming domain: ", domain)
 	  ngx.log(ngx.NOTICE, "Testing program init: run multiname_logic")
 	  local_domain = multiname_logic(domain)
+	  ngx.log(ngx.NOTICE, "Testing program init: END")
 	end
 
 	function multiname_logic (domain)
@@ -343,7 +344,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 
 	function check_domain (domain)
 	  local storage = auto_ssl_instance.storage
-	  local keys, err = storage:adapter:keys_with_suffix(self, "main")
+	  local keys, err = storage:get_adapter_keys("main")
 	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
 	end
   
