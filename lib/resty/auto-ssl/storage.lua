@@ -400,8 +400,25 @@ function _M.check_multiname(self, domain)
 end
 
  -- Сhecks the certificate for the ability to add new domains.
-function _M.validate_multiname(self, domain_array)
+function _M.validate_multiname(self, domain_array, new_domain)
    ngx.log(ngx.ERR, "Multiname: storage: validate_multiname: ", domain_array)
+   local domains_string = domain_array:gsub(':', '')
+   
+   local domains = 0
+   for word in string.gmatch(domain_array, '([^:]+)') do
+     domains +=1
+   end
+   
+   if not domains or domains > 100 then
+     return nil
+   end
+   
+   local check_len = 350 + domains_string:len() + new_domain:len() + (4 * domains)
+   if check_len > 2000 then
+     return nil
+   end
+   
+   return true
 end
 
 return _M
