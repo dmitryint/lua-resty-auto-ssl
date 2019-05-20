@@ -343,7 +343,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 
 	function check_domain (domain)
 	  local storage = auto_ssl_instance.storage
-	  local keys, err = storage.keys_with_suffix(self, "main")
+	  local keys, err = storage:adapter:keys_with_suffix(self, "main")
 	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
 	end
   
