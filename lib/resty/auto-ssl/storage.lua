@@ -352,7 +352,7 @@ function _M.issue_cert_unlock(self, domain, lock_rand_value)
 end
 
 function _M.get_adapter_keys(self,suffix)
-	return self.adapter:keys_with_suffix(self, suffix)
+	return self.adapter:keys_with_suffix(suffix)
 end
 
 return _M
