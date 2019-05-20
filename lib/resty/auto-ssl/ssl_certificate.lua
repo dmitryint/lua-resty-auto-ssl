@@ -285,119 +285,65 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     ngx.log(ngx.WARN, "auto-ssl: could not determine domain for request (SNI not supported?) - using fallback - " .. (domain_err or ""))
     return
   end
-
-  -- Check to ensure the domain is one we allow for handling SSL.
-  local allow_domain = auto_ssl_instance:get("allow_domain")
-  if not allow_domain(domain) then
-    ngx.log(ngx.NOTICE, "auto-ssl: domain not allowed - using fallback - ", domain)
-    return
-  end
   
-	function table.val_to_str ( v )
-	  if "string" == type( v ) then
-		v = string.gsub( v, "\n", "\\n" )
-		if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
-		  return "'" .. v .. "'"
-		end
-		return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
-	  else
-		return "table" == type( v ) and table.tostring( v ) or
-		  tostring( v )
+  local function multiname_logic (domain)
+    -- Check to ensure the domain is one we allow for handling SSL.
+	local allow_domain = auto_ssl_instance:get("allow_domain")
+	if not allow_domain(domain) then
+	  ngx.log(ngx.NOTICE, "auto-ssl: domain not allowed - using fallback - ", domain)
+	  return nil
+	end
+	
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: incoming domain: ", domain)
+    local storage = auto_ssl_instance.storage
+    local local_domain = storage:check_multiname(domain)
+    if local_domain then
+	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: domain found, not created and return: ", local_domain)
+      return local_domain
+    end
+   
+    local domain_cert_name = nil
+    local cert_array = storage:get_multiname_array()
+    if cert_array then
+	  for cert_name, value in pairs(cert_array) do
+	    local valid = storage:validate_multiname(value, domain)
+	    if valid then
+		  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: cert_name validated: ", cert_name)
+		  domain_cert_name = cert_name
+		  break
+	    end
 	  end
-	end
+    end
+   
+    if domain_cert_name then
+ 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: update: ", domain_cert_name)
+	  storage:update_multiname(domain_cert_name,domain)
+	  issue_cert(auto_ssl_instance, storage, domain)
+    else
+	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: create: ", domain_cert_name)
+	  storage:create_multiname(domain)
+	  issue_cert(auto_ssl_instance, storage, domain)
+    end
+   
+    local local_domain = storage:check_multiname(domain)
+    if local_domain then
+	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: domain found, modify and return: ", local_domain)
+	  return local_domain
+    end
+   
+    ngx.log(ngx.ERR, "auto-ssl: multiname_logic: error: domain: ", domain)
+    return ngx.exit(ngx.ERROR)
+  end
 
-	function table.key_to_str ( k )
-	  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
-		return k
-	  else
-		return "[" .. table.val_to_str( k ) .. "]"
-	  end
-	end
-
-	function table.tostring( tbl )
-	  local result, done = {}, {}
-	  for k, v in ipairs( tbl ) do
-		table.insert( result, table.val_to_str( v ) )
-		done[ k ] = true
-	  end
-	  for k, v in pairs( tbl ) do
-		if not done[ k ] then
-		  table.insert( result,
-			table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
-		end
-	  end
-	  return "{" .. table.concat( result, "," ) .. "}"
-	end
-
-	function test_logic(domain)
-	  local local_domain
-	  ngx.log(ngx.NOTICE, "Testing program init: incoming domain: ", domain)
-	  ngx.log(ngx.NOTICE, "Testing program init: run multiname_logic")
-	  local_domain = multiname_logic(domain)
-	  ngx.log(ngx.NOTICE, "Testing program init: END")
-	end
-
-	function multiname_logic (domain)
-	   local storage = auto_ssl_instance.storage
-	   
-	   -- local local_domain = storage:check_multiname(domain)
-	   -- if local_domain then
-	   --   return local_domain
-	   -- end
-	   
-	   local domain_cert_name = nil
-	   local cert_array = storage:get_multiname_array()
-	   if cert_array then
-	     for cert_name, value in pairs(cert_array) do
-		   local valid = storage:validate_multiname(value, domain)
-		   if valid then
-		     domain_cert_name = cert_name
-		     break
-		   end
-	     end
-	   end
-	   
-	   if domain_cert_name then
-	     ngx.log(ngx.NOTICE, "Testing program init: multiname_logic: update: ", domain_cert_name)
-	   else
-	     ngx.log(ngx.NOTICE, "Testing program init: multiname_logic: create: ", domain_cert_name)
-	   end
-	   
-	   ngx.log(ngx.NOTICE, "Testing program init: multiname_logic: local_domain: ", local_domain)
-	   return domain
-	end
-
-  test_logic(domain)
+  -- Multi-certificate check.
   local multiname = auto_ssl_instance:get("multiname_cert")
   if multiname then
-    local storage = auto_ssl_instance.storage
-	local sub_domain
-    domain, sub_domain = storage:get_domains(domain, multiname)
-	ngx.log(ngx.DEBUG, "auto-ssl: multiname: doamin: ", domain, " subdomain: ", sub_domain)
-    local check_subdomain, size = storage:check_subdomain(domain, sub_domain)
-	ngx.log(ngx.DEBUG, "auto-ssl: multiname: check_subdomain: ", check_subdomain, " size: ", size)
-    if size then
-      if size>99 then
-        storage:set_subdomain(domain, sub_domain, sub_domain)
-        storage:set_subdomain(sub_domain, sub_domain)
-      elseif not check_subdomain then
-        storage:set_subdomain(domain, sub_domain, nil)
-        issue_cert(auto_ssl_instance, storage, domain)
-      end
-    elseif not check_subdomain then
-      storage:set_subdomain(domain, sub_domain, nil)
-      issue_cert(auto_ssl_instance, storage, domain)
-      local ok, err = ssl.clear_certs()
-      if not ok then
-        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
-        return ngx.exit(ngx.ERROR)
-      end
-    end
-
-    local check_subdomain, size = storage:check_subdomain(domain, sub_domain)
-    domain = check_subdomain
+    local new_domain = multiname_logic(domain)
+	if new_domain then
+	  domain = new_domain
+	end
   end
-
+  
   -- Get or issue the certificate for this domain.
   local cert_der, get_cert_der_err = get_cert_der(auto_ssl_instance, domain, ssl_options)
   if get_cert_der_err then

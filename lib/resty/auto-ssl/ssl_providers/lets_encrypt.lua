@@ -32,20 +32,18 @@ function _M.issue_cert(auto_ssl_instance, domain)
     "--challenge", "http-01",
     "--config", base_dir .. "/letsencrypt/config",
     "--hook", lua_root .. "/bin/resty-auto-ssl/letsencrypt_hooks",
-    "--domain", domain,
+    "-d", domain,
   }
 
   if multiname then
     local storage = auto_ssl_instance.storage
-    domain_list, size = storage:get_subdomain(domain)
-    if domain_list then
-      for _, i in pairs(domain_list) do
-        table.insert(command_args, "--domain")
-        table.insert(command_args, i)
-      end
-    else
-        table.insert(command_args, "--domain")
-        table.insert(command_args, domain)
+    local data, err = storage:get_adapter_key_main(domain, true)
+    if not err then
+	  for sub_domain in string.gmatch(data['subdomain'], '([^:]+)') do
+	    ngx.log(ngx.DEBUG, "auto-ssl: letsencrypt: command_args: add: ", sub_domain)
+	    table.insert(command_args, "-d")
+		table.insert(command_args, sub_domain)
+	  end
     end
   end
 
