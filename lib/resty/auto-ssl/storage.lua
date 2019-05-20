@@ -216,7 +216,7 @@ function _M.create_multiname(self,domain)
 end
 
 function _M.update_multiname(self,domain_cert_name,domain)
-    local existed_data, err = self.get_adapter_key_main(self,domain_cert_name)
+    local existed_data, err = self.get_adapter_key_main(self,domain_cert_name,true)
 	if not err then
 	  local name = existed_data["domain"]
 	  local include = existed_data["subdomain"]
