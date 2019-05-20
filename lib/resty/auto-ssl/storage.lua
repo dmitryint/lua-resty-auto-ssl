@@ -211,7 +211,7 @@ function _M.validate_multiname(self, domain_array, new_domain)
 end
 
 function _M.create_multiname(self,domain)
-    local data = cjson.encode({"domain"=domain,"subdomain"=domain})
+    local data = cjson.encode({domain=domain,subdomain=domain})
     return self.adapter:set(domain .. ":main", data)
 end
 
@@ -221,7 +221,7 @@ function _M.update_multiname(self,domain_cert_name,domain)
 	  local name = existed_data["domain"]
 	  local include = existed_data["subdomain"]
 	  include = include .. ":" .. domain
-	  local data = cjson.encode({"domain"=name,"subdomain"=include})
+	  local data = cjson.encode({domain=name,subdomain=include})
 	  return self.adapter:set(domain .. ":main", data)
 	end
 	
