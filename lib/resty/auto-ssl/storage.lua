@@ -355,4 +355,7 @@ function _M.get_adapter_keys(self,suffix)
 	return self.adapter:keys_with_suffix(suffix)
 end
 
+function _M.get_adapter_key(self,key)
+	return self.adapter:get(key)
+end
 return _M
