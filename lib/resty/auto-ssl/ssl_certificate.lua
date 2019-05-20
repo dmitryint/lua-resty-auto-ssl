@@ -292,7 +292,62 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     ngx.log(ngx.NOTICE, "auto-ssl: domain not allowed - using fallback - ", domain)
     return
   end
+  
+	function table.val_to_str ( v )
+	  if "string" == type( v ) then
+		v = string.gsub( v, "\n", "\\n" )
+		if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
+		  return "'" .. v .. "'"
+		end
+		return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
+	  else
+		return "table" == type( v ) and table.tostring( v ) or
+		  tostring( v )
+	  end
+	end
 
+	function table.key_to_str ( k )
+	  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
+		return k
+	  else
+		return "[" .. table.val_to_str( k ) .. "]"
+	  end
+	end
+
+	function table.tostring( tbl )
+	  local result, done = {}, {}
+	  for k, v in ipairs( tbl ) do
+		table.insert( result, table.val_to_str( v ) )
+		done[ k ] = true
+	  end
+	  for k, v in pairs( tbl ) do
+		if not done[ k ] then
+		  table.insert( result,
+			table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
+		end
+	  end
+	  return "{" .. table.concat( result, "," ) .. "}"
+	end
+
+	function test_logic(domain)
+	  local local_domain
+	  ngx.log(ngx.NOTICE, "Testing program init: incoming domain: ", domain)
+	  ngx.log(ngx.NOTICE, "Testing program init: run multiname_logic")
+	  local_domain = multiname_logic(domain)
+	end
+
+	function multiname_logic (domain)
+	   local local_domain = check_domain(domain)
+	   return domain
+	end
+
+	function check_domain (domain)
+	  local storage = auto_ssl_instance.storage
+	  local keys, err = storage.keys_with_suffix(self, "main")
+	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
+	end
+  
+  test_logic(domain)
   local multiname = auto_ssl_instance:get("multiname_cert")
   if multiname then
     local storage = auto_ssl_instance.storage

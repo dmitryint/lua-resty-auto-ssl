@@ -105,6 +105,7 @@ function _M.get_subdomain(self, domain)
 
     local function check_max_len(subdomain_list, size)
       local x = ((string.len(table.concat(subdomain_list, ":"))) * size) + (10 * size)
+	  ngx.log(ngx.DEBUG, "auto-ssl: multiname: get_subdomain: check_max_len: x:", x)
       if x > 1000 then
         return 100
       else
