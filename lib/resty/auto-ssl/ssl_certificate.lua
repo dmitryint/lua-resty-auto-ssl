@@ -370,7 +370,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 		  ngx.log(ngx.NOTICE, "Testing program: check domain: ", existed_domain)
 		  if existed_domain == domain then
 		    return_cert_name = k
-		  fi
+		  end
 		end
 	  end
 	  
