@@ -322,14 +322,24 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  check = issue_cert(auto_ssl_instance, storage, domain)
 	  if not check then
 	    storage:remove_multiname(domain_cert_name,domain)
-	  end 
+	  end
+	  local ok, err = ssl.clear_certs()
+      if not ok then
+        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
+        return ngx.exit(ngx.ERROR)
+      end
     else
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: create: ", domain_cert_name)
 	  storage:create_multiname(domain)
 	  check = issue_cert(auto_ssl_instance, storage, domain)
 	  if not check then
 	    storage:remove_multiname(domain,domain)
-	  end 
+	  end
+	  local ok, err = ssl.clear_certs()
+      if not ok then
+        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
+        return ngx.exit(ngx.ERROR)
+      end
     end
 	
     local local_domain = storage:check_multiname(domain)
