@@ -354,7 +354,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 		if err then
 	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
 		end
-        ngx.log(ngx.ERR, "Testing program: keys from redis: key", table.tostring(key))	
+        ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", key)	
 	  end
 	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
 	end
