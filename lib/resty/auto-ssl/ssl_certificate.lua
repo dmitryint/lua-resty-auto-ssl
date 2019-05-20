@@ -343,6 +343,9 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	end
 
 	function check_domain (domain)
+	  local cert_name = "domain"
+	  local include = "subdomain"
+	  local domain_dict = {}
 	  local storage = auto_ssl_instance.storage
 	  local keys, err = storage:get_adapter_keys("main")
 	  if err then
@@ -350,13 +353,29 @@ local function do_ssl(auto_ssl_instance, ssl_options)
       end
 	  for k, v in pairs(keys) do
 	    ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", k, " value: ", v)
-	    local key, err = storage:get_adapter_key(v)
+	    local key, err = storage:get_adapter_key(v, true)
 		if err then
 	      ngx.log(ngx.ERR, "Testing program: keys from redis: key: ERROR", table.tostring(keys))
+		  continue
 		end
-        ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", key)	
+		domain_dict[key[cert_name]] = key[include] 
+        ngx.log(ngx.ERR, "Testing program: keys from redis: key: ", table.tostring(key))	
 	  end
 	  ngx.log(ngx.NOTICE, "Testing program: keys from redis", table.tostring(keys))
+	  ngx.log(ngx.NOTICE, "Testing program: ARRAY", table.tostring(domain_dict))
+	  
+	  local return_cert_name
+	  for k, v in pairs(domain_dict) do
+	    for existed_domain in string.gmatch(v, '([^:]+)') do
+		  ngx.log(ngx.NOTICE, "Testing program: check domain: ", existed_domain)
+		  if existed_domain == domain then
+		    return_cert_name = k
+		  fi
+		end
+	  end
+	  
+	  ngx.log(ngx.NOTICE, "Testing program: return domain: ", return_cert_name)
+	  return return_cert_name
 	end
   
   test_logic(domain)
