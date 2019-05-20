@@ -340,10 +340,10 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	function multiname_logic (domain)
 	   local storage = auto_ssl_instance.storage
 	   
-	   local local_domain = storage:check_multiname(domain)
-	   if local_domain then
-	     return local_domain
-	   end
+	   -- local local_domain = storage:check_multiname(domain)
+	   -- if local_domain then
+	   --   return local_domain
+	   -- end
 	   
 	   local cert_array = storage:get_multiname_array()
 	   for cert_name, value in cert_array do
