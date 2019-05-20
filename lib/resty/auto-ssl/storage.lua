@@ -228,4 +228,22 @@ function _M.update_multiname(self,domain_cert_name,domain)
 	return nil
 end 
 
+function _M.remove_multiname(self,domain_cert_name,domain)
+    local existed_data, err = self.get_adapter_key_main(self,domain_cert_name,true)
+	if not err then
+	  local name = existed_data["domain"]
+	  local include = existed_data["subdomain"]
+	  
+	  include = include:gsub(domain, '')
+	  include = include:gsub('::', ':')
+	  include = include:gsub('^:', '')
+	  include = include:gsub(':$', '')
+	  
+	  local data = cjson.encode({domain=name,subdomain=include})
+	  return self.adapter:set(domain .. ":main", data)
+	end
+	
+    return nil
+end 
+
 return _M

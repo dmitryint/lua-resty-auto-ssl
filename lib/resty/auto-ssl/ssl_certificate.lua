@@ -315,24 +315,29 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  end
     end
    
+    local check = true
     if domain_cert_name then
  	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: update: ", domain_cert_name)
 	  storage:update_multiname(domain_cert_name,domain)
-	  issue_cert(auto_ssl_instance, storage, domain)
+	  check = issue_cert(auto_ssl_instance, storage, domain)
+	  if not check then
+	    storage:remove_multiname(domain_cert_name,domain)
+	  end 
     else
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: create: ", domain_cert_name)
 	  storage:create_multiname(domain)
-	  issue_cert(auto_ssl_instance, storage, domain)
+	  check = issue_cert(auto_ssl_instance, storage, domain)
+	  if not check then
+	    storage:remove_multiname(domain,domain)
+	  end 
     end
-   
+	
     local local_domain = storage:check_multiname(domain)
     if local_domain then
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: domain found, modify and return: ", local_domain)
 	  return local_domain
     end
-   
-    ngx.log(ngx.ERR, "auto-ssl: multiname_logic: error: domain: ", domain)
-    return ngx.exit(ngx.ERROR)
+	
   end
 
   -- Multi-certificate check.
