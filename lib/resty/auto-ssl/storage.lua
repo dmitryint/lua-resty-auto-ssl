@@ -202,7 +202,7 @@ function _M.validate_multiname(self, domain_array, new_domain)
      return nil
    end
    
-   local check_len = 350 + domains_string:len() + new_domain:len() + (4 * domains)
+   local check_len = 350 + domains_string:len() + new_domain:len() + (3 * domains)
    if check_len > 2000 then
      return nil
    end
