@@ -315,6 +315,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  storage:update_multiname(domain_cert_name,domain)
 	  check = issue_cert(auto_ssl_instance, storage, domain_cert_name, true)
 	  if not check then
+	    ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", domain_cert_name)
 	    storage:remove_multiname(domain_cert_name,domain)
 	  end
 	  local ok, err = ssl.clear_certs()
@@ -327,6 +328,7 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  storage:create_multiname(domain)
 	  check = issue_cert(auto_ssl_instance, storage, domain, true)
 	  if not check then
+	    ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", domain)
 	    storage:remove_multiname(domain,domain)
 	  end
 	  local ok, err = ssl.clear_certs()
