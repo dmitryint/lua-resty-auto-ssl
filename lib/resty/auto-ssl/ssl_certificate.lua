@@ -295,7 +295,10 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: domain found, not created and return: ", local_domain)
       return local_domain
     end
-   
+    
+	ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: set lock: domain: ", domain)
+	local check = storage:multiname_lock_set(domain)
+	
     local domain_cert_name = nil
     local cert_array = storage:get_multiname_array()
     if cert_array then
@@ -309,33 +312,30 @@ local function do_ssl(auto_ssl_instance, ssl_options)
 	  end
     end
    
-    local check = true
+	local cn_name 
     if domain_cert_name then
+	  cn_name = domain_cert_name
  	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: update: ", domain_cert_name)
 	  storage:update_multiname(domain_cert_name,domain)
-	  check = issue_cert(auto_ssl_instance, storage, domain_cert_name, true)
-	  if not check then
-	    ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", domain_cert_name)
-	    storage:remove_multiname(domain_cert_name,domain)
-	  end
-	  local ok, err = ssl.clear_certs()
-      if not ok then
-        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
-        return ngx.exit(ngx.ERROR)
-      end
     else
+	  cn_name = domain
 	  ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: create: ", domain_cert_name)
 	  storage:create_multiname(domain)
-	  check = issue_cert(auto_ssl_instance, storage, domain, true)
-	  if not check then
-	    ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", domain)
-	    storage:remove_multiname(domain,domain)
-	  end
-	  local ok, err = ssl.clear_certs()
-      if not ok then
-        ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
-        return ngx.exit(ngx.ERROR)
-      end
+    end
+	
+	local check = issue_cert(auto_ssl_instance, storage, cn_name, true)
+    if not check then
+	  ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", cn_name)
+	  storage:remove_multiname(cn_name,domain)
+    end
+  
+    ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: delete lock: domain: ", domain)
+    local check = storage:multiname_lock_delete(domain)
+  
+    local ok, err = ssl.clear_certs()
+    if not ok then
+	  ngx.log(ngx.ERR, "failed to clear existing (fallback) certificates")
+	  return ngx.exit(ngx.ERROR)
     end
 	
     local local_domain = storage:check_multiname(domain)
@@ -349,6 +349,12 @@ local function do_ssl(auto_ssl_instance, ssl_options)
   -- Multi-certificate check.
   local multiname = auto_ssl_instance:get("multiname_cert")
   if multiname then
+    local storage = auto_ssl_instance.storage
+	local lock = storage:multiname_lock_get(domain)
+	if lock then
+	  ngx.log(ngx.ERR, "auto-ssl: multiname: lock detected: domain: ", domain)
+	  return 
+	end
     local new_domain = multiname_logic(domain)
 	if new_domain then
 	  domain = new_domain

@@ -215,6 +215,19 @@ function _M.create_multiname(self,domain)
     return self.adapter:set(domain .. ":main", data)
 end
 
+function _M.multiname_lock_set(self,domain)
+    local data = cjson.encode({lock="locked"})
+    return self.adapter:set(domain .. ":multiname_lock", data)
+end
+
+function _M.multiname_lock_get(self,domain)
+    return self.adapter:get(domain .. ":multiname_lock")
+end
+
+function _M.multiname_lock_delete(self,domain)
+	return self.adapter:delete(domain .. ":multiname_lock")
+end
+
 function _M.update_multiname(self,domain_cert_name,domain)
     local existed_data, err = self.get_adapter_key_main(self,domain_cert_name,true)
 	if not err then
