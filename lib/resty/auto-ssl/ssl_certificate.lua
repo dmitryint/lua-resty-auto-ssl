@@ -327,7 +327,10 @@ local function do_ssl(auto_ssl_instance, ssl_options)
     if not check then
 	  ngx.log(ngx.WARN, "auto-ssl: multiname_logic: remove: ", cn_name)
 	  storage:remove_multiname(cn_name,domain)
-    end
+    else
+	  local cert_der = convert_to_der_and_cache(cn_name, check)
+	  ngx.sleep(1)
+	end 
   
     ngx.log(ngx.DEBUG, "auto-ssl: multiname_logic: delete lock: domain: ", domain)
     local check = storage:multiname_lock_delete(domain)
